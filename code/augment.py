@@ -1,8 +1,10 @@
 # Easy data augmentation techniques for text classification
 # Jason Wei and Kai Zou
 
-from eda import *
-
+# from eda import *
+from ds_eda import *
+from tqdm import tqdm
+import json
 #arguments to be parsed from command line
 import argparse
 ap = argparse.ArgumentParser()
@@ -51,7 +53,7 @@ if args.alpha_rd is not None:
 if alpha_sr == alpha_ri == alpha_rs == alpha_rd == 0:
      ap.error('At least one alpha should be greater than zero')
 
-#generate more data with standard augmentation
+#generate more data with standard augmentation（original）
 def gen_eda(train_orig, output_file, alpha_sr, alpha_ri, alpha_rs, alpha_rd, num_aug=9):
 
     writer = open(output_file, 'w')
@@ -68,8 +70,24 @@ def gen_eda(train_orig, output_file, alpha_sr, alpha_ri, alpha_rs, alpha_rd, num
     writer.close()
     print("generated augmented sentences with eda for " + train_orig + " to " + output_file + " with num_aug=" + str(num_aug))
 
+# generate more data with nyt
+def gen_eda_nyt(train_orig, output_file, alpha_sr, alpha_ri, alpha_rs, alpha_rd, num_aug=9):
+    
+    lines = open(train_orig, 'r').readlines()
+    writer = open(output_file, 'w')
+    for i, line in tqdm(enumerate(lines)):
+        instance = json.loads(line[:-1])
+        aug_sentences = ds_eda(instance, alpha_sr=alpha_sr, alpha_ri=alpha_ri, alpha_rs=alpha_rs, p_rd=alpha_rd, num_aug=num_aug)
+        
+        for aug_sentence in aug_sentences:
+            writer.write(json.dumps(aug_sentence) + '\n')
+    
+    writer.close()
+    print('generated augmented sentences with ds_eda for ' + train_orig + ' to ' + output_file + 'with num_aug=' + str(num_aug))
+
+
 #main function
 if __name__ == "__main__":
 
     #generate augmented sentences and output into a new file
-    gen_eda(args.input, output, alpha_sr=alpha_sr, alpha_ri=alpha_ri, alpha_rs=alpha_rs, alpha_rd=alpha_rd, num_aug=num_aug)
+    gen_eda_nyt(args.input, output, alpha_sr=alpha_sr, alpha_ri=alpha_ri, alpha_rs=alpha_rs, alpha_rd=alpha_rd, num_aug=num_aug)
